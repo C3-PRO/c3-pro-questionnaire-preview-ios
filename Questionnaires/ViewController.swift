@@ -39,7 +39,7 @@ class ViewController: UIViewController {
 		}
 		markBusy()
 		let base = url.deletingLastPathComponent().deletingLastPathComponent()
-		smart = Client(baseURL: base.absoluteString, settings: [:])
+		smart = Client(baseURL: base, settings: [:])
 		smart?.ready() { error in
 			if let error = error {
 				print("Ignoring SMART client error: \(error)")
@@ -60,9 +60,16 @@ class ViewController: UIViewController {
 	func didLoad(questionnaire: Questionnaire) {
 		controller = QuestionnaireController(questionnaire: questionnaire)
 		controller?.whenCompleted = { viewController, response in
-			if let json = response?.asJSON() {
-				if let data = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted]), let js = String(data: data, encoding: String.Encoding.utf8) {
-					print("QuestionnaireResponse: \(js)")
+			if let response = response {
+				do {
+					let json = try response.asJSON()
+					let data = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted])
+					if let js = String(data: data, encoding: String.Encoding.utf8) {
+						print("QuestionnaireResponse: \(js)")
+					}
+				}
+				catch {
+					print("Failed to interpret response: \(error)")
 				}
 			}
 			self.dismiss(animated: true)
